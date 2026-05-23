@@ -29,7 +29,7 @@ const Footer: React.FC = () => {
 
     const supportLinks: NavLink[] = [
         { name: 'Hỏi đáp', link: '#' },
-        { name: 'Chính sách bảo mật', link: '#' },
+        { name: 'Chính sách bảo mật', link: '/chinh-sach-bao-mat' },
         { name: 'Điều khoản sử dụng', link: '#' }
     ];
 

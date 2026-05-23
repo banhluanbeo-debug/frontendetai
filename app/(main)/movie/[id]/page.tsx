@@ -9,22 +9,22 @@ import { getShowtimesByMovieId } from '@/app/components/services/showtime.servic
 interface MovieDetail {
     id: number;
     title: string;
-    originalTitle: string;
-    rating: string;
+    originalTitle?: string;
+    rating?: string;
     genre: string;
     duration: number;
     releaseDate: string;
     director: string;
-    cast: string[];
+    cast: string | string[];  // API trả string, có thể là array
     content: string;
     trailerUrl: string;
     posterUrl: string;
     backdropUrl: string;
     language: string;
     subtitle: string;
-    ageRating: string;
+    ageLimit?: string;   // API dùng ageLimit
+    ageRating?: string;  // fallback
     showtimes: Showtime[];
-    status: "NOW_SHOWING" | "COMING";
 }
 
 interface Showtime {
@@ -78,13 +78,32 @@ const MovieDetailPage: React.FC = () => {
 
         getShowtimesByMovieId(Number(params.id))
             .then(data => {
-                setShowtimes(data);
-                if (data.length > 0) setSelectedDate(data[0].showDate);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const maxDate = new Date(today);
+                maxDate.setDate(today.getDate() + 4);
+                maxDate.setHours(23, 59, 59, 999);
+
+                const filtered = data.filter((st: any) => {
+                    const showDate = new Date(st.showDate);
+                    showDate.setHours(0, 0, 0, 0);
+                    return showDate >= today && showDate <= maxDate;
+                });
+
+                setShowtimes(filtered);
+                if (filtered.length > 0) {
+                    const sortedDates = [...new Set(filtered.map((st: any) => st.showDate))]
+                        .sort((a: any, b: any) => new Date(a).getTime() - new Date(b).getTime());
+                    setSelectedDate(sortedDates[0] as string);
+                }
             })
             .catch(err => console.error(err));
     }, [params.id]);
 
-    const dates = [...new Set(showtimes.map((st: any) => st.showDate))];
+    // Lọc các ngày và sắp xếp tăng dần (đã được filter từ lúc set state)
+    const dates = [...new Set(showtimes.map((st: any) => st.showDate))]
+        .sort((a: any, b: any) => new Date(a).getTime() - new Date(b).getTime());
+
     const rooms = [...new Set(showtimes.map((st: any) => st.roomName))];
 
     if (!movieDetail) {
@@ -92,11 +111,11 @@ const MovieDetailPage: React.FC = () => {
     }
 
     // 👇 Thêm block này ngay sau
-    if (movieDetail.status === "COMING") {
+    if (movieDetail.releaseDate && new Date(movieDetail.releaseDate) > new Date()) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="min-h-screen bg-transparent text-white flex items-center justify-center">
                 <div className="text-center px-6">
-                    <div className="relative h-[400px] w-full max-w-md mx-auto rounded-2xl overflow-hidden mb-8 shadow-2xl">
+                    <div className="relative h-[400px] w-full max-w-md mx-auto rounded-2xl overflow-hidden mb-8 shadow-2xl border border-white/10">
                         <img
                             src={`http://localhost:8080/images/${movieDetail.posterUrl}`}
                             alt={movieDetail.title}
@@ -104,24 +123,24 @@ const MovieDetailPage: React.FC = () => {
                         />
                         <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center">
                             <span className="text-6xl mb-4">🎬</span>
-                            <span className="bg-red-600 text-white text-xl font-bold px-6 py-2 rounded-full">
+                            <span className="bg-[#7c4dff] text-white text-xl font-bold px-6 py-2 rounded-full shadow-[0_4px_15px_rgba(124,77,255,0.4)]">
                                 SẮP RA MẮT
                             </span>
                         </div>
                     </div>
 
-                    <h1 className="text-4xl font-bold text-gray-800 mb-2">{movieDetail.title}</h1>
-                    <p className="text-gray-500 text-lg mb-2">{movieDetail.originalTitle}</p>
-                    <p className="text-red-600 font-semibold text-lg mb-6">
+                    <h1 className="text-4xl font-bold text-white mb-2">{movieDetail.title}</h1>
+                    <p className="text-gray-300 text-lg mb-2">{movieDetail.originalTitle}</p>
+                    <p className="text-[#7c4dff] font-semibold text-lg mb-6">
                         📅 Khởi chiếu: {movieDetail.releaseDate}
                     </p>
-                    <p className="text-gray-600 max-w-md mx-auto mb-8">
+                    <p className="text-gray-400 max-w-md mx-auto mb-8">
                         Phim chưa được công chiếu. Hãy quay lại sau để xem thông tin chi tiết và đặt vé!
                     </p>
 
                     <Link
                         href="/movie"
-                        className="inline-block bg-red-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-red-700 transition text-lg"
+                        className="inline-block bg-[#7c4dff] text-white px-8 py-3 rounded-lg font-bold hover:bg-[#651fff] transition text-lg shadow-[0_4px_15px_rgba(124,77,255,0.4)]"
                     >
                         ← Quay lại danh sách phim
                     </Link>
@@ -144,7 +163,7 @@ const MovieDetailPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 ">
+        <div className="min-h-screen bg-transparent text-white">
             {/* Hero Section with Backdrop */}
             <div className="relative h-[750px] overflow-hidden mt-0">
                 <video
@@ -172,10 +191,12 @@ const MovieDetailPage: React.FC = () => {
                             />
                             <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-3">
-                                    <span className="bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-bold">
-                                        {movieDetail.ageRating}
+                                    <span className="bg-[#7c4dff] text-white px-3 py-1 rounded-lg text-sm font-bold shadow-md">
+                                        {movieDetail.ageLimit ?? movieDetail.ageRating ?? 'PG'}
                                     </span>
-                                    <span className="text-yellow-400 text-lg">★ {movieDetail.rating}/10</span>
+                                    {movieDetail.rating && (
+                                        <span className="text-yellow-400 text-lg">★ {movieDetail.rating}/10</span>
+                                    )}
                                     <span className="text-gray-300 text-base">{movieDetail.duration} phút</span>
                                 </div>
                                 <h1 className="text-5xl md:text-6xl font-bold mb-2">{movieDetail.title}</h1>
@@ -189,7 +210,7 @@ const MovieDetailPage: React.FC = () => {
                                 <div className="flex gap-3">
                                     <button
                                         onClick={() => setActiveTab('showtimes')}
-                                        className="bg-red-600 px-8 py-3 rounded-lg font-bold hover:bg-red-700 transition transform hover:scale-105 text-lg"
+                                        className="bg-[#7c4dff] px-8 py-3 rounded-lg font-bold hover:bg-[#651fff] transition transform hover:scale-105 text-lg shadow-[0_4px_15px_rgba(124,77,255,0.4)]"
                                     >
                                         MUA VÉ NGAY
                                     </button>
@@ -216,13 +237,13 @@ const MovieDetailPage: React.FC = () => {
 
             {/* Tabs Navigation */}
             <div className="container mx-auto px-4 mt-8">
-                <div className="border-b border-gray-200">
+                <div className="border-b border-white/10">
                     <div className="flex gap-8">
                         <button
                             onClick={() => setActiveTab('info')}
                             className={`pb-4 px-2 font-semibold transition relative text-xl ${activeTab === 'info'
-                                ? 'text-red-600 border-b-2 border-red-600'
-                                : 'text-gray-600 hover:text-red-600'
+                                ? 'text-[#7c4dff] border-b-2 border-[#7c4dff]'
+                                : 'text-gray-400 hover:text-[#7c4dff]'
                                 }`}
                         >
                             THÔNG TIN PHIM
@@ -230,8 +251,8 @@ const MovieDetailPage: React.FC = () => {
                         <button
                             onClick={() => setActiveTab('showtimes')}
                             className={`pb-4 px-2 font-semibold transition relative text-xl ${activeTab === 'showtimes'
-                                ? 'text-red-600 border-b-2 border-red-600'
-                                : 'text-gray-600 hover:text-red-600'
+                                ? 'text-[#7c4dff] border-b-2 border-[#7c4dff]'
+                                : 'text-gray-400 hover:text-[#7c4dff]'
                                 }`}
                         >
                             LỊCH CHIẾU
@@ -239,8 +260,8 @@ const MovieDetailPage: React.FC = () => {
                         <button
                             onClick={() => setActiveTab('reviews')}
                             className={`pb-4 px-2 font-semibold transition relative text-xl ${activeTab === 'reviews'
-                                ? 'text-red-600 border-b-2 border-red-600'
-                                : 'text-gray-600 hover:text-red-600'
+                                ? 'text-[#7c4dff] border-b-2 border-[#7c4dff]'
+                                : 'text-gray-400 hover:text-[#7c4dff]'
                                 }`}
                         >
                         </button>
@@ -254,17 +275,15 @@ const MovieDetailPage: React.FC = () => {
                 {activeTab === 'info' && (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div className="lg:col-span-2">
-                            <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-                                <h2 className="text-3xl font-bold mb-4 text-gray-800">Nội dung phim</h2>
-                                <p className="text-gray-700 leading-relaxed whitespace-pre-line text-base">
-                                    Sau sự kiện tàn khốc của Avengers: Endgame, khi Thanos đã xóa sổ một nửa sự sống trong vũ trụ, những siêu anh hùng còn lại rơi vào tuyệt vọng. Tuy nhiên, họ không từ bỏ mà cùng nhau tìm kiếm giải pháp cuối cùng để đảo ngược thảm họa.
-
-                                    Một kế hoạch táo bạo được đặt ra, đưa họ quay ngược thời gian để thu thập các Viên đá Vô cực. Nhưng hành trình này không chỉ là cuộc chiến chống lại Thanos, mà còn là sự hy sinh, tình bạn và những lựa chọn thay đổi số phận của toàn bộ vũ trụ.
+                            <div className="bg-[#1a237e]/40 backdrop-blur-md border border-white/10 rounded-xl shadow-lg p-6 mb-6">
+                                <h2 className="text-3xl font-bold mb-4 text-white">Nội dung phim</h2>
+                                <p className="text-gray-200 leading-relaxed whitespace-pre-line text-base">
+                                    {movieDetail.content || 'Nội dung đang được cập nhật...'}
                                 </p>
                             </div>
 
-                            <div id="trailer-section" className="bg-white rounded-xl shadow-lg p-6">
-                                <h2 className="text-3xl font-bold mb-4 text-gray-800">Trailer</h2>
+                            <div id="trailer-section" className="bg-[#1a237e]/40 backdrop-blur-md border border-white/10 rounded-xl shadow-lg p-6">
+                                <h2 className="text-3xl font-bold mb-4 text-white">Trailer</h2>
 
                                 <div className="aspect-w-16 aspect-h-9">
                                     {movieDetail.trailerUrl ? (
@@ -275,47 +294,47 @@ const MovieDetailPage: React.FC = () => {
                                             allowFullScreen
                                         />
                                     ) : (
-                                        <p className="text-gray-500 text-lg">Chưa có trailer</p>
+                                        <p className="text-gray-400 text-lg">Chưa có trailer</p>
                                     )}
                                 </div>
                             </div>
                         </div>
 
                         <div>
-                            <div className="bg-white rounded-xl shadow-lg p-6 sticky top-4">
-                                <h3 className="text-2xl font-bold mb-4 text-gray-800">Thông tin chi tiết</h3>
+                            <div className="bg-[#1a237e]/40 backdrop-blur-md border border-white/10 rounded-xl shadow-lg p-6 sticky top-24">
+                                <h3 className="text-2xl font-bold mb-4 text-white">Thông tin chi tiết</h3>
                                 <div className="space-y-3 text-base">
                                     <div>
-                                        <span className="font-semibold text-gray-600 text-lg">Đạo diễn:</span>
-                                        <p className="text-gray-800 text-base mt-1">Anthony Russo, Joe Russo</p>
+                                        <span className="font-semibold text-gray-400 text-lg">Đạo diễn:</span>
+                                        <p className="text-gray-200 text-base mt-1">{movieDetail.director || 'Đang cập nhật'}</p>
                                     </div>
                                     <div>
-                                        <span className="font-semibold text-gray-600 text-lg">Diễn viên:</span>
-                                        <p className="text-gray-800 text-base mt-1">
-                                            {Array.isArray(movieDetail.cast) && movieDetail.cast.length > 0
+                                        <span className="font-semibold text-gray-400 text-lg">Diễn viên:</span>
+                                        <p className="text-gray-200 text-base mt-1">
+                                            {Array.isArray(movieDetail.cast)
                                                 ? movieDetail.cast.join(', ')
-                                                : 'Không có diễn viên'}
+                                                : (movieDetail.cast || 'Không có diễn viên')}
                                         </p>
                                     </div>
                                     <div>
-                                        <span className="font-semibold text-gray-600 text-lg">Thể loại:</span>
-                                        <p className="text-gray-800 text-base mt-1">{movieDetail.genre}</p>
+                                        <span className="font-semibold text-gray-400 text-lg">Thể loại:</span>
+                                        <p className="text-gray-200 text-base mt-1">{movieDetail.genre}</p>
                                     </div>
                                     <div>
-                                        <span className="font-semibold text-gray-600 text-lg">Thời lượng:</span>
-                                        <p className="text-gray-800 text-base mt-1">{movieDetail.duration} phút</p>
+                                        <span className="font-semibold text-gray-400 text-lg">Thời lượng:</span>
+                                        <p className="text-gray-200 text-base mt-1">{movieDetail.duration} phút</p>
                                     </div>
                                     <div>
-                                        <span className="font-semibold text-gray-600 text-lg">Ngày khởi chiếu:</span>
-                                        <p className="text-gray-800 text-base mt-1">{movieDetail.releaseDate}</p>
+                                        <span className="font-semibold text-gray-400 text-lg">Ngày khởi chiếu:</span>
+                                        <p className="text-gray-200 text-base mt-1">{movieDetail.releaseDate}</p>
                                     </div>
                                     <div>
-                                        <span className="font-semibold text-gray-600 text-lg">Ngôn ngữ:</span>
-                                        <p className="text-gray-800 text-base mt-1">{movieDetail.language}</p>
+                                        <span className="font-semibold text-gray-400 text-lg">Ngôn ngữ:</span>
+                                        <p className="text-gray-200 text-base mt-1">{movieDetail.language}</p>
                                     </div>
                                     <div>
-                                        <span className="font-semibold text-gray-600 text-lg">Phụ đề:</span>
-                                        <p className="text-gray-800 text-base mt-1">{movieDetail.subtitle}</p>
+                                        <span className="font-semibold text-gray-400 text-lg">Phụ đề:</span>
+                                        <p className="text-gray-200 text-base mt-1">{movieDetail.subtitle}</p>
                                     </div>
                                 </div>
                             </div>
@@ -327,16 +346,16 @@ const MovieDetailPage: React.FC = () => {
                 {activeTab === 'showtimes' && (
                     <div>
                         {/* Date Selector */}
-                        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-                            <h2 className="text-3xl font-bold mb-4 text-gray-800">Chọn ngày chiếu</h2>
+                        <div className="bg-[#1a237e]/40 backdrop-blur-md border border-white/10 rounded-xl shadow-lg p-6 mb-6">
+                            <h2 className="text-3xl font-bold mb-4 text-white">Chọn ngày chiếu</h2>
                             <div className="flex gap-3 overflow-x-auto pb-2">
                                 {dates.map((date) => (
                                     <button
                                         key={date}
                                         onClick={() => setSelectedDate(date)}
                                         className={`px-6 py-3 rounded-lg font-semibold transition whitespace-nowrap text-base ${selectedDate === date
-                                            ? 'bg-red-600 text-white'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            ? 'bg-[#7c4dff] text-white shadow-md'
+                                            : 'bg-white/10 text-gray-300 hover:bg-white/20'
                                             }`}
                                     >
                                         {date}
@@ -354,8 +373,8 @@ const MovieDetailPage: React.FC = () => {
                                     );
 
                                     return (
-                                        <div key={room} className="bg-white rounded-xl shadow-lg p-6">
-                                            <h3 className="text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
+                                        <div key={room} className="bg-[#1a237e]/40 backdrop-blur-md border border-white/10 rounded-xl shadow-lg p-6">
+                                            <h3 className="text-2xl font-bold mb-4 text-white flex items-center gap-2">
                                                 <span>🏠</span> {room}
                                             </h3>
                                             {filtered.length > 0 ? (
@@ -364,7 +383,7 @@ const MovieDetailPage: React.FC = () => {
                                                         <button
                                                             key={st.id}
                                                             onClick={() => router.push(`/booking/${movieDetail.id}?showtimeId=${st.id}`)}
-                                                            className="p-3 rounded-lg text-center bg-red-50 hover:bg-red-600 hover:text-white transition cursor-pointer"
+                                                            className="p-3 rounded-lg text-center bg-[#3b3f8c]/60 border border-white/10 hover:bg-[#7c4dff] hover:border-transparent text-white transition cursor-pointer"
                                                         >
                                                             <div className="font-bold text-base">{st.showTime.slice(0, 5)}</div>
                                                             <div className="text-sm font-semibold mt-1">
@@ -374,7 +393,7 @@ const MovieDetailPage: React.FC = () => {
                                                     ))}
                                                 </div>
                                             ) : (
-                                                <p className="text-gray-500 text-center py-8 text-lg">
+                                                <p className="text-gray-400 text-center py-8 text-lg">
                                                     Chưa có lịch chiếu cho ngày này
                                                 </p>
                                             )}
@@ -391,23 +410,7 @@ const MovieDetailPage: React.FC = () => {
             </div>
 
             {/* Related Movies Section */}
-            <section className="bg-gray-100 py-12 mt-8">
-                <div className="container mx-auto px-4">
-                    <h2 className="text-4xl font-bold mb-8 text-gray-800 border-l-8 border-red-600 pl-4">
-                        PHIM LIÊN QUAN
-                    </h2>
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                        {[1, 2, 3, 4, 5, 6].map((i) => (
-                            <div key={i} className="bg-white rounded-lg shadow overflow-hidden hover:shadow-xl transition cursor-pointer">
-                                <div className="h-48 bg-gradient-to-br from-gray-400 to-gray-600"></div>
-                                <div className="p-3">
-                                    <h3 className="font-semibold text-base text-center">Phim liên quan {i}</h3>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
+
         </div >
     );
 };

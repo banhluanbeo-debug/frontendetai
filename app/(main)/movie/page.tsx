@@ -15,7 +15,7 @@ interface Movie {
     duration?: number;
     ageLimit?: string;
     releaseDate?: string;
-    status?: "NOW_SHOWING" | "COMING";
+    endDate?: string;
 }
 
 const IMAGE_BASE = "http://localhost:8080/images";
@@ -42,13 +42,8 @@ export default function MoviesPage() {
     }, []);
 
     // 🔥 FIX: tách phim theo status
-    const nowShowingMovies = movies.filter(
-        (m) => m.status === "NOW_SHOWING"
-    );
+    const nowShowingMovies = movies;
 
-    const comingSoonMovies = movies.filter(
-        (m) => m.status === "COMING"
-    );
 
     // Genre list
     const genres = [
@@ -88,15 +83,15 @@ export default function MoviesPage() {
         });
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-transparent text-white">
 
             {/* HEADER */}
-            <div className="bg-white border-b sticky top-0 z-10 shadow-sm">
+            <div className="bg-[#0b1a3a]/80 backdrop-blur-md border-b border-white/10 sticky top-0 z-10 shadow-sm">
                 <div className="container mx-auto px-4 py-4">
 
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
 
-                        <h1 className="text-2xl font-bold text-gray-800 border-l-4 border-red-600 pl-3">
+                        <h1 className="text-2xl font-bold text-white border-l-4 border-[#7c4dff] pl-3">
                             TẤT CẢ PHIM
                         </h1>
 
@@ -109,7 +104,7 @@ export default function MoviesPage() {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Tìm kiếm phim..."
-                                className="w-full pl-9 pr-4 py-2 border rounded-lg bg-gray-50 text-sm"
+                                className="w-full pl-9 pr-4 py-2 border border-white/20 rounded-lg bg-white/10 text-white placeholder-gray-400 text-sm focus:outline-none focus:border-[#7c4dff] focus:ring-1 focus:ring-[#7c4dff] transition"
                             />
                         </div>
 
@@ -117,11 +112,11 @@ export default function MoviesPage() {
                         <select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value as any)}
-                            className="px-3 py-2 border rounded-lg text-sm bg-gray-50"
+                            className="px-3 py-2 border border-white/20 rounded-lg text-sm bg-[#1a237e] text-white focus:outline-none focus:border-[#7c4dff] focus:ring-1 focus:ring-[#7c4dff] transition"
                         >
-                            <option value="default">Mặc định</option>
-                            <option value="rating">Đánh giá cao nhất</option>
-                            <option value="duration">Thời lượng</option>
+                            <option value="default" className="bg-[#0b1a3a]">Mặc định</option>
+                            <option value="rating" className="bg-[#0b1a3a]">Đánh giá cao nhất</option>
+                            <option value="duration" className="bg-[#0b1a3a]">Thời lượng</option>
                         </select>
                     </div>
 
@@ -131,9 +126,9 @@ export default function MoviesPage() {
                             <button
                                 key={g}
                                 onClick={() => setSelectedGenre(g)}
-                                className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap ${selectedGenre === g
-                                    ? "bg-red-600 text-white"
-                                    : "bg-gray-100 text-gray-600"
+                                className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition ${selectedGenre === g
+                                    ? "bg-[#7c4dff] text-white shadow-md"
+                                    : "bg-white/10 text-gray-300 hover:bg-white/20"
                                     }`}
                             >
                                 {g}
@@ -149,9 +144,9 @@ export default function MoviesPage() {
 
                 {/* COUNT */}
                 {!loading && (
-                    <p className="text-sm text-gray-500 mb-6">
+                    <p className="text-sm text-gray-400 mb-6">
                         Hiển thị{" "}
-                        <span className="font-medium text-gray-800">
+                        <span className="font-medium text-white">
                             {filtered.length}
                         </span>{" "}
                         phim đang chiếu
@@ -163,9 +158,9 @@ export default function MoviesPage() {
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                         {Array.from({ length: 8 }).map((_, i) => (
                             <div key={i} className="animate-pulse">
-                                <div className="aspect-[2/3] bg-gray-200 rounded-xl mb-3" />
-                                <div className="h-4 bg-gray-200 mb-2 rounded" />
-                                <div className="h-3 bg-gray-200 w-1/2 rounded" />
+                                <div className="aspect-[2/3] bg-white/10 rounded-xl mb-3" />
+                                <div className="h-4 bg-white/10 mb-2 rounded" />
+                                <div className="h-3 bg-white/10 w-1/2 rounded" />
                             </div>
                         ))}
                     </div>
@@ -175,13 +170,13 @@ export default function MoviesPage() {
                 {!loading && filtered.length === 0 && (
                     <div className="text-center py-20">
                         <p className="text-5xl">🎬</p>
-                        <p className="text-gray-500 mt-2">Không tìm thấy phim</p>
+                        <p className="text-gray-400 mt-2">Không tìm thấy phim</p>
                         <button
                             onClick={() => {
                                 setSearch("");
                                 setSelectedGenre("Tất cả");
                             }}
-                            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg"
+                            className="mt-4 px-4 py-2 bg-[#7c4dff] hover:bg-[#651fff] text-white rounded-lg transition shadow-[0_4px_15px_rgba(124,77,255,0.4)]"
                         >
                             Reset
                         </button>
@@ -197,7 +192,7 @@ export default function MoviesPage() {
                                 <div className="group cursor-pointer">
 
                                     {/* POSTER */}
-                                    <div className="aspect-[2/3] relative rounded-xl overflow-hidden bg-gray-200">
+                                    <div className="aspect-[2/3] relative rounded-xl overflow-hidden bg-[#1a237e]/40 border border-white/10">
 
                                         <img
                                             src={
@@ -206,12 +201,12 @@ export default function MoviesPage() {
                                                     : "/no-image.jpg"
                                             }
                                             alt={movie.title}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition"
+                                            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                                         />
 
                                         {/* overlay */}
-                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
-                                            <span className="bg-red-600 text-white px-3 py-2 rounded">
+                                        <div className="absolute inset-0 bg-[#0b1a3a]/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-300 backdrop-blur-sm">
+                                            <span className="bg-[#7c4dff] text-white px-4 py-2 rounded-lg font-bold shadow-[0_4px_15px_rgba(124,77,255,0.4)] transform translate-y-4 group-hover:translate-y-0 transition">
                                                 MUA VÉ
                                             </span>
                                         </div>
@@ -220,7 +215,7 @@ export default function MoviesPage() {
                                         {movie.ageLimit && (
                                             <span
                                                 className={`absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded border ${AGE_COLORS[movie.ageLimit] ??
-                                                    "bg-gray-100"
+                                                    "bg-gray-100 text-gray-800"
                                                     }`}
                                             >
                                                 {movie.ageLimit}
@@ -229,18 +224,18 @@ export default function MoviesPage() {
 
                                         {/* RATING */}
                                         {movie.rating && (
-                                            <span className="absolute top-2 right-2 text-[10px] bg-black/60 text-yellow-400 px-2 py-0.5 rounded">
-                                                ★ {movie.rating}
+                                            <span className="absolute top-2 right-2 text-[10px] bg-[#7c4dff] text-white font-bold px-2 py-0.5 rounded shadow-md">
+                                                {movie.rating}
                                             </span>
                                         )}
                                     </div>
 
                                     {/* INFO */}
-                                    <h3 className="text-sm font-semibold mt-2 line-clamp-2">
+                                    <h3 className="text-sm font-semibold mt-3 text-white line-clamp-2 group-hover:text-[#7c4dff] transition">
                                         {movie.title}
                                     </h3>
 
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-gray-400 mt-1">
                                         {movie.genre?.split(",")[0]}
                                         {movie.duration && ` · ${movie.duration} phút`}
                                     </p>

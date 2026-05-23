@@ -1,0 +1,134 @@
+"use client";
+
+import React, { useState } from "react";
+import { register } from "@/app/components/services/auth.service";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+export default function RegisterPage() {
+    const router = useRouter();
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
+    const [form, setForm] = useState({
+        name: "",
+        email: "",
+        password: "",
+        phone: "",
+    });
+
+    const handleChange = (key: string, value: string) => {
+        setForm({ ...form, [key]: value });
+    };
+
+    const handleRegister = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError("");
+        setLoading(true);
+        console.log("🔄 Bắt đầu gọi API đăng ký với dữ liệu:", form);
+
+        try {
+            const result = await register(form);
+            console.log("✅ Đăng ký thành công! Phản hồi từ server:", result);
+            alert("Đăng ký thành công!");
+            router.push("/auth/login");
+        } catch (err) {
+            console.error("❌ Lỗi khi đăng ký:", err);
+            setError("Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.");
+        } finally {
+            console.log("⏹️ Hoàn tất quá trình xử lý form đăng ký.");
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-transparent text-white flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-md w-full space-y-8 bg-[#1a237e]/40 backdrop-blur-md border border-white/10 p-10 rounded-2xl shadow-2xl relative overflow-hidden">
+                {/* Decorative glowing orb */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-[#7c4dff] rounded-full blur-[80px] opacity-30 pointer-events-none"></div>
+
+                <div className="relative z-10">
+                    <div className="text-center">
+                        <h2 className="text-4xl font-bold text-white mb-2 tracking-tight">ĐĂNG KÝ</h2>
+                        <p className="text-gray-300">Gia nhập vũ trụ LUNCINEMAS</p>
+                    </div>
+
+                    <form className="mt-8 space-y-5" onSubmit={handleRegister}>
+                        {error && (
+                            <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg text-sm text-center backdrop-blur-sm">
+                                {error}
+                            </div>
+                        )}
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Họ và tên</label>
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="Nhập họ và tên..."
+                                    value={form.name}
+                                    onChange={(e) => handleChange("name", e.target.value)}
+                                    className="w-full px-4 py-3 rounded-xl bg-white/5 text-white border border-white/10 focus:outline-none focus:border-[#7c4dff] focus:ring-1 focus:ring-[#7c4dff] placeholder-white/30 transition backdrop-blur-sm"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
+                                <input
+                                    type="email"
+                                    required
+                                    placeholder="Nhập địa chỉ email..."
+                                    value={form.email}
+                                    onChange={(e) => handleChange("email", e.target.value)}
+                                    className="w-full px-4 py-3 rounded-xl bg-white/5 text-white border border-white/10 focus:outline-none focus:border-[#7c4dff] focus:ring-1 focus:ring-[#7c4dff] placeholder-white/30 transition backdrop-blur-sm"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Mật khẩu</label>
+                                <input
+                                    type="password"
+                                    required
+                                    placeholder="Tạo mật khẩu..."
+                                    value={form.password}
+                                    onChange={(e) => handleChange("password", e.target.value)}
+                                    className="w-full px-4 py-3 rounded-xl bg-white/5 text-white border border-white/10 focus:outline-none focus:border-[#7c4dff] focus:ring-1 focus:ring-[#7c4dff] placeholder-white/30 transition backdrop-blur-sm"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Số điện thoại</label>
+                                <input
+                                    type="tel"
+                                    required
+                                    placeholder="Nhập số điện thoại..."
+                                    value={form.phone}
+                                    onChange={(e) => handleChange("phone", e.target.value)}
+                                    className="w-full px-4 py-3 rounded-xl bg-white/5 text-white border border-white/10 focus:outline-none focus:border-[#7c4dff] focus:ring-1 focus:ring-[#7c4dff] placeholder-white/30 transition backdrop-blur-sm"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="pt-2">
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-[0_4px_15px_rgba(124,77,255,0.4)] text-base font-bold text-white bg-[#7c4dff] hover:bg-[#651fff] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#7c4dff] transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-1"
+                            >
+                                {loading ? "Đang xử lý..." : "ĐĂNG KÝ TÀI KHOẢN"}
+                            </button>
+                        </div>
+                    </form>
+
+                    <div className="mt-8 text-center text-sm text-gray-400">
+                        Đã có tài khoản?{" "}
+                        <Link href="/auth/login" className="font-semibold text-[#7c4dff] hover:text-[#651fff] transition">
+                            Đăng nhập ngay
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}

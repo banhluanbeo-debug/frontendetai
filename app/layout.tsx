@@ -1,5 +1,5 @@
-// src/app/layout.tsx
 import './globals.css'
+import Script from "next/script";
 
 export const metadata = {
     title: 'My Project',
@@ -14,6 +14,13 @@ export default function RootLayout({
     return (
         <html lang="vi">
             <body>
+
+                {/* 🔥 Google Identity Services */}
+                <Script
+                    src="https://accounts.google.com/gsi/client"
+                    strategy="afterInteractive"
+                />
+
                 {children}
             </body>
         </html>

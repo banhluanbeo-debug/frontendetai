@@ -8,7 +8,7 @@ export interface SeatAPI {
 }
 
 export interface SelectedSeat {
-    id: string;
+    id: number;
     type: "single" | "vip" | "bed";
     price: number;
 }

@@ -7,7 +7,8 @@ export const getShowtimesByMovieId = async (movieId: number) => {
 
     if (!res.ok) throw new Error("Failed to fetch showtimes");
 
-    return res.json();
+    const data = await res.json();
+    return data.filter((st: any) => st.movieId === movieId);
 };
 export const getShowtimeById = async (id: number) => {
     const res = await fetch(`http://localhost:8080/api/showtimes/${id}`, {

@@ -202,7 +202,7 @@ const Home = () => {
 
     // ===== UI =====
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen text-white bg-transparent">
 
             {/* QUICK BOOKING */}
             <QuickBookingForm
@@ -217,7 +217,7 @@ const Home = () => {
             <NowShowing movies={nowShowing} />
 
             {/* COMING SOON + PROMOTIONS */}
-            <section className="bg-gray-100 py-12">
+            <section className="bg-black/20 py-12 border-y border-white/5">
                 <div className="container mx-auto px-4">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <ComingSoon movies={comingSoon} />
