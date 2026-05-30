@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8080/api/showtimes";
+const BASE_URL = "https://backendemo-cbwy.onrender.com/api/showtimes";
 
 export const getShowtimesByMovieId = async (movieId: number) => {
     const res = await fetch(`${BASE_URL}?movieId=${movieId}`, {
@@ -11,7 +11,7 @@ export const getShowtimesByMovieId = async (movieId: number) => {
     return data.filter((st: any) => st.movieId === movieId);
 };
 export const getShowtimeById = async (id: number) => {
-    const res = await fetch(`http://localhost:8080/api/showtimes/${id}`, {
+    const res = await fetch(`https://backendemo-cbwy.onrender.com/api/showtimes/${id}`, {
         cache: "no-store",
     });
 

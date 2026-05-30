@@ -12,7 +12,7 @@ export default function BookingSuccessPage() {
 
     useEffect(() => {
         if (!orderId) return;
-        fetch(`http://localhost:8080/api/orders/${orderId}`)
+        fetch(`https://backendemo-cbwy.onrender.com/api/orders/${orderId}`)
             .then(res => res.json())
             .then(data => setOrder(data))
             .finally(() => setLoading(false));

@@ -10,7 +10,7 @@ export interface Voucher {
 
 export const getVouchersByUser = async (userId: number): Promise<Voucher[]> => {
     try {
-        const res = await fetch(`http://localhost:8080/api/vouchers/user/${userId}`);
+        const res = await fetch(`https://backendemo-cbwy.onrender.com/api/vouchers/user/${userId}`);
         if (!res.ok) throw new Error("Failed to fetch vouchers");
         return await res.json();
     } catch (err) {

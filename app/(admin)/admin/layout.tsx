@@ -11,6 +11,7 @@ const menuItems = [
   { id: "movies", name: "Quản lý Phim", path: "/admin/movies" },
   { id: "rooms", name: "Quản lý Phòng", path: "/admin/rooms" },
   { id: "foods", name: "Đồ ăn / Thức uống", path: "/admin/foods" },
+  { id: "contacts", name: "Liên hệ", path: "/admin/contacts" },
 ];
 
 export default function AdminLayout({

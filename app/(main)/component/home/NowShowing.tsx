@@ -27,7 +27,7 @@ const NowShowing: React.FC<NowShowingProps> = ({ movies }) => {
                         <div className="bg-[#1a237e]/40 backdrop-blur-md border border-white/10 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl hover:shadow-[#7c4dff]/30 transition cursor-pointer group">
                             <div className="aspect-[4/5] relative">
                                 <img
-                                    src={`http://localhost:8080/images/${movie.posterUrl}`}
+                                    src={movie.posterUrl?.startsWith('http') ? movie.posterUrl : `https://backendemo-cbwy.onrender.com/images/${movie.posterUrl}`}
                                     alt={movie.title}
                                     className="w-full h-full object-cover"
                                 />

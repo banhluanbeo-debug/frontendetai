@@ -16,7 +16,7 @@ export default function OrderHistoryPage() {
         }
 
         const user = JSON.parse(userStr);
-        fetch(`http://localhost:8080/api/orders/user/${user.id}`)
+        fetch(`https://backendemo-cbwy.onrender.com/api/orders/user/${user.id}`)
             .then(res => res.json())
             .then(data => setOrders(data))
             .finally(() => setLoading(false));

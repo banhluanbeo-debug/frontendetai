@@ -62,7 +62,7 @@ const MovieDetailPage: React.FC = () => {
     useEffect(() => {
         if (!params?.id || Array.isArray(params.id)) return;
 
-        fetch(`http://localhost:8080/api/movies/${params.id}`)
+        fetch(`https://backendemo-cbwy.onrender.com/api/movies/${params.id}`)
             .then(res => res.json())
             .then(data =>
 
@@ -117,7 +117,7 @@ const MovieDetailPage: React.FC = () => {
                 <div className="text-center px-6">
                     <div className="relative h-[400px] w-full max-w-md mx-auto rounded-2xl overflow-hidden mb-8 shadow-2xl border border-white/10">
                         <img
-                            src={`http://localhost:8080/images/${movieDetail.posterUrl}`}
+                            src={movieDetail.posterUrl?.startsWith('http') ? movieDetail.posterUrl : `https://backendemo-cbwy.onrender.com/images/${movieDetail.posterUrl}`}
                             alt={movieDetail.title}
                             className="w-full h-full object-cover"
                         />
@@ -166,26 +166,36 @@ const MovieDetailPage: React.FC = () => {
         <div className="min-h-screen bg-transparent text-white">
             {/* Hero Section with Backdrop */}
             <div className="relative h-[750px] overflow-hidden mt-0">
-                <video
-                    key={movieDetail.id}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-full h-full object-cover"
-                >
-                    <source
-                        src={movieDetail.backdropUrl || "http://localhost:8080/video/default.mp4"}
-                        type="video/mp4"
+                {movieDetail.backdropUrl?.includes('player.cloudinary.com') ? (
+                    <iframe
+                        key={movieDetail.id}
+                        src={`${movieDetail.backdropUrl}&autoplay=true&loop=true&muted=true&controls=false`}
+                        className="absolute inset-0 w-full h-full pointer-events-none scale-[1.2]"
+                        allow="autoplay; fullscreen"
+                        style={{ border: 'none' }}
                     />
-                </video>
+                ) : (
+                    <video
+                        key={movieDetail.id}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover"
+                    >
+                        <source
+                            src={movieDetail.backdropUrl?.startsWith('http') ? movieDetail.backdropUrl : `https://backendemo-cbwy.onrender.com/video/${movieDetail.backdropUrl || 'default.mp4'}`}
+                            type="video/mp4"
+                        />
+                    </video>
+                )}
                 {/* <div className="absolute inset-0 bg-gradient-to-t from-gray-900/50 via-gray-900/30 to-transparent"></div> */}
                 {/* Movie Info Overlay */}
                 <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
                     <div className="container mx-auto">
                         <div className="flex flex-col md:flex-row gap-8 items-end">
                             <img
-                                src={`http://localhost:8080/images/${movieDetail.posterUrl}`}
+                                src={movieDetail.posterUrl?.startsWith('http') ? movieDetail.posterUrl : `https://backendemo-cbwy.onrender.com/images/${movieDetail.posterUrl}`}
                                 alt={movieDetail.title}
                                 className="w-48 h-72 object-cover rounded-xl shadow-2xl hidden md:block"
                             />

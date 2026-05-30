@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8080/api/auth";
+const BASE_URL = "https://backendemo-cbwy.onrender.com/api/auth";
 
 export const login = async (data: {
     email: string;

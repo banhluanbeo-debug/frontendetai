@@ -26,7 +26,7 @@ export default function SeatPicker({ showtimeId, onConfirm }: SeatPickerProps) {
     useEffect(() => {
         if (!showtimeId) return;
         setLoading(true);
-        fetch(`http://localhost:8080/api/seats/showtime-seats?showtimeId=${showtimeId}`)
+        fetch(`https://backendemo-cbwy.onrender.com/api/seats/showtime-seats?showtimeId=${showtimeId}`)
             .then((res) => {
                 if (!res.ok) throw new Error("Không thể lấy dữ liệu ghế");
                 return res.json();
@@ -50,7 +50,7 @@ export default function SeatPicker({ showtimeId, onConfirm }: SeatPickerProps) {
         if (!showtimeId) return;
 
         const fetchUnavailable = () => {
-            fetch(`http://localhost:8080/api/seats/unavailable?showtimeId=${showtimeId}`)
+            fetch(`https://backendemo-cbwy.onrender.com/api/seats/unavailable?showtimeId=${showtimeId}`)
                 .then(res => res.json())
                 .then(data => {
                     const ids = Array.isArray(data)

@@ -37,7 +37,7 @@ export default function LoginPage() {
 
         try {
             // gửi token về backend
-            const res = await fetch("http://localhost:8080/api/auth/google", {
+            const res = await fetch("https://backendemo-cbwy.onrender.com/api/auth/google", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

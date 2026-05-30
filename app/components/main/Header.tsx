@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from "next/link";
 
 interface HeaderProps {
@@ -16,24 +16,26 @@ interface Theater {
 
 const Header: React.FC<HeaderProps> = ({ onSearch }) => {
     const [searchTerm, setSearchTerm] = useState<string>('');
-    const [isTheaterOpen, setIsTheaterOpen] = useState(false);
     const [user, setUser] = useState<any>(null);
     const [isUserOpen, setIsUserOpen] = useState(false);
+    
+    // State cho dropdown Lịch chiếu
+    const [isLichChieuOpen, setIsLichChieuOpen] = useState(false);
+    const [hoveredTimeGroup, setHoveredTimeGroup] = useState<string | null>(null);
+    const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const timeGroups = {
+        'Sáng': ['08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30'],
+        'Chiều': ['12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30'],
+        'Tối': ['18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30', '23:00']
+    };
 
     useEffect(() => {
         const stored = localStorage.getItem("user");
         if (stored) setUser(JSON.parse(stored));
     }, []);
 
-    // Danh sách rạp
-    const theaters: Theater[] = [
-        { id: 1, name: "Luncinemas Hai Bà Trưng", address: "52 Nguyễn Trãi", district: "Quận 1", city: "TP.HCM" },
-        { id: 2, name: "Luncinemas Quốc Thanh", address: "12 Quốc Thanh", district: "Quận 1", city: "TP.HCM" },
-        { id: 3, name: "Luncinemas Sinh Viên", address: "234 Lê Duẩn", district: "Quận 1", city: "TP.HCM" },
-        { id: 4, name: "Luncinemas Cộng Hòa", address: "123 Cộng Hòa", district: "Quận Tân Bình", city: "TP.HCM" },
-        { id: 5, name: "Luncinemas Phạm Hùng", address: "456 Phạm Hùng", district: "Quận 8", city: "TP.HCM" },
-        { id: 6, name: "Luncinemas Lê Văn Việt", address: "789 Lê Văn Việt", district: "Quận 9", city: "TP.HCM" },
-    ];
+    // Danh sách rạp đã được chuyển sang nơi khác
 
     const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -81,9 +83,8 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
                                     </svg>
                                 </button>
 
-                                <div className={`absolute right-0 top-full mt-2 w-56 bg-[#1a237e]/90 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl z-50 transition-all duration-300 ${
-                                    isUserOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'
-                                }`}>
+                                <div className={`absolute right-0 top-full mt-2 w-56 bg-[#1a237e]/90 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl z-50 transition-all duration-300 ${isUserOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'
+                                    }`}>
                                     {/* Thông tin cơ bản */}
                                     <div className="px-4 py-3 border-b border-white/10">
                                         <p className="text-white font-semibold text-sm">{user.name}</p>
@@ -140,49 +141,77 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
 
                 {/* MENU */}
                 <div className="hidden md:flex justify-center space-x-8 py-3 text-sm font-medium">
-                    {/* DROPDOWN CHỌN RẠP - KHÔNG CÓ TOOLTIP */}
-                    <div
+                    {/* LỊCH CHIẾU DROPDOWN */}
+                    <div 
                         className="relative"
-                        onMouseEnter={() => setIsTheaterOpen(true)}
-                        onMouseLeave={() => setIsTheaterOpen(false)}
+                        onMouseEnter={() => {
+                            if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+                            // Mở dropdown khi hover thay vì chỉ click
+                            setIsLichChieuOpen(true);
+                        }}
+                        onMouseLeave={() => {
+                            hoverTimeoutRef.current = setTimeout(() => {
+                                setIsLichChieuOpen(false);
+                                setHoveredTimeGroup(null);
+                            }, 400); // Trì hoãn 400ms để người dùng kịp rê chuột
+                        }}
                     >
-                        <button className="hover:text-yellow-300 flex items-center gap-1 transition">
-                            Chọn rạp
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <button 
+                            onClick={() => setIsLichChieuOpen(!isLichChieuOpen)}
+                            className="hover:text-yellow-300 flex items-center gap-1 transition h-full"
+                        >
+                            Lịch chiếu
+                            <svg className={`w-4 h-4 transition-transform ${isLichChieuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
 
-                        {/* Dropdown - Click vào là chuyển trang, không có tooltip */}
                         <div
-                            className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl min-w-max z-50 transition-all duration-300 ${isTheaterOpen
+                            className={`absolute top-full left-1/2 -translate-x-1/2 mt-4 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl z-50 transition-all duration-300 ${isLichChieuOpen
                                 ? 'opacity-100 visible translate-y-0'
                                 : 'opacity-0 invisible -translate-y-2'
                                 }`}
                         >
-                            <div className="grid grid-cols-2 gap-2 p-4">
-                                {theaters.map((theater) => (
-                                    <Link
-                                        key={theater.id}
-                                        href={`/rap/${theater.id}`}
-                                        className="block px-5 py-3 hover:bg-white/5 cursor-pointer rounded-lg transition-colors min-w-[220px]"
-                                    >
-                                        <div className="font-semibold text-white text-sm group-hover:text-[#7c4dff] transition">
-                                            {theater.name}
+                            <div className="flex p-2 relative">
+                                {/* Cột menu Sáng, Chiều, Tối */}
+                                <div className="flex flex-col min-w-[120px] border-r border-white/10">
+                                    {(Object.keys(timeGroups) as Array<keyof typeof timeGroups>).map((group) => (
+                                        <div
+                                            key={group}
+                                            onMouseEnter={() => setHoveredTimeGroup(group)}
+                                            className={`px-4 py-3 cursor-pointer rounded-lg transition-colors text-white font-semibold flex justify-between items-center ${hoveredTimeGroup === group ? 'bg-white/10 text-yellow-300' : 'hover:bg-white/5'}`}
+                                        >
+                                            {group}
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                            </svg>
                                         </div>
-                                        <div className="text-xs text-gray-400 mt-1">
-                                            {theater.district}, {theater.city}
+                                    ))}
+                                </div>
+
+                                {/* Bảng ma trận giờ chiếu (max 4 số 1 hàng) hiển thị khi hover */}
+                                {hoveredTimeGroup && (
+                                    <div className="absolute left-full top-0 ml-2 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl p-4 min-w-[320px]">
+                                        <h3 className="text-yellow-300 font-bold mb-3 border-b border-white/10 pb-2">Buổi {hoveredTimeGroup}</h3>
+                                        <div className="grid grid-cols-4 gap-2">
+                                            {timeGroups[hoveredTimeGroup as keyof typeof timeGroups].map((time) => (
+                                                <Link 
+                                                    key={time} 
+                                                    href={`/showtimes?time=${time}`}
+                                                    className="bg-white/5 hover:bg-[#7c4dff] border border-white/10 rounded-md py-2 px-1 text-center text-sm font-semibold text-white transition-colors cursor-pointer"
+                                                >
+                                                    {time}
+                                                </Link>
+                                            ))}
                                         </div>
-                                    </Link>
-                                ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
-
-                    <Link href="/lich-chieu" className="hover:text-yellow-300 transition">Lịch chiếu</Link>
-                    <Link href="/khuyen-mai" className="hover:text-yellow-300 transition">Khuyến mãi</Link>
+                    <Link href="/promotion" className="hover:text-yellow-300 transition">Khuyến mãi</Link>
                     <Link href="/dich-vu-giai-tri" className="hover:text-yellow-300 transition">Dịch vụ giải trí khác</Link>
-                    <Link href="/gioi-thieu" className="hover:text-yellow-300 transition">Giới thiệu</Link>
+                    <Link href="/about" className="hover:text-yellow-300 transition">Giới thiệu</Link>
                 </div>
             </div>
         </nav>

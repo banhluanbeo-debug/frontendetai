@@ -18,7 +18,7 @@ interface Movie {
     endDate?: string;
 }
 
-const IMAGE_BASE = "http://localhost:8080/images";
+const getImageUrl = (url: string) => url?.startsWith('http') ? url : `https://backendemo-cbwy.onrender.com/images/${url}`;
 
 const AGE_COLORS: Record<string, string> = {
     P: "bg-green-100 text-green-800 border-green-300",
@@ -197,7 +197,7 @@ export default function MoviesPage() {
                                         <img
                                             src={
                                                 movie.posterUrl
-                                                    ? `${IMAGE_BASE}/${movie.posterUrl}`
+                                                    ? getImageUrl(movie.posterUrl)
                                                     : "/no-image.jpg"
                                             }
                                             alt={movie.title}

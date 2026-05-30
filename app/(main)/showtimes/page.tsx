@@ -1,6 +1,24 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { getNowShowingMovies } from '@/app/components/services/movie.service';
+
+interface ShowtimeInfo {
+    id: number;
+    showDate: string;
+    showTime: string;
+    price: number;
+    roomId: number;
+    roomName: string;
+}
+
+interface Cinema {
+    id: number;
+    name: string;
+    address: string;
+    showtimes: ShowtimeInfo[];
+}
 
 interface MovieSchedule {
     id: number;
@@ -13,12 +31,7 @@ interface MovieSchedule {
     description: string;
     poster: string;
     isShowing: boolean;
-    cinemas: {
-        id: number;
-        name: string;
-        address: string;
-        showtimes: string[];
-    }[];
+    cinemas: Cinema[];
 }
 
 interface FormData {
@@ -28,129 +41,163 @@ interface FormData {
     showtime: string;
 }
 
-const LichChieuPage = () => {
+const LichChieuPageContent = () => {
+    const searchParams = useSearchParams();
+    const timeParam = searchParams.get('time');
+
     const [formData, setFormData] = useState<FormData>({
         theater: '',
         movie: '',
         date: '',
-        showtime: ''
+        showtime: timeParam || ''
     });
+
+    const [moviesSchedule, setMoviesSchedule] = useState<MovieSchedule[]>([]);
     const [filteredResults, setFilteredResults] = useState<MovieSchedule[]>([]);
     const [hasSearched, setHasSearched] = useState(false);
 
-    const theaters = ['Luncinemas Hai Bà Trưng', 'Luncinemas Quốc Thanh', 'Luncinemas Sinh Viên', 'Luncinemas Cộng Hòa'];
-    const dates = ['19/03', '20/03', '21/03', '22/03', '23/03'];
-    const showtimes = ['10:00', '13:30', '16:45', '19:30', '22:15'];
-
-    const nowShowingMovies = [
-        { id: 1, title: 'KUNG FU QUẢI CHƯỞNG' },
-        { id: 2, title: 'QUỶ NHẬP TRÀNG 2' },
-        { id: 3, title: 'TỨ HỔ ĐẠI NÁO' }
-    ];
-
-    const moviesSchedule: MovieSchedule[] = [
-        {
-            id: 1,
-            title: 'KUNG FU QUẢI CHƯỞNG',
-            rating: 'T18',
-            genre: 'Hài, Hành Động',
-            duration: 127,
-            country: 'Hong Kong',
-            language: 'Lồng Tiếng',
-            description: 'Phim dành cho khán giả từ đủ 18 tuổi trở lên (18+)',
-            poster: 'https://picsum.photos/id/104/300/400',
-            isShowing: true,
-            cinemas: [
-                {
-                    id: 1,
-                    name: 'Luncinemas Hai Bà Trưng',
-                    address: '52 Nguyễn Trãi, Q.1, TP.HCM',
-                    showtimes: ['10:00', '13:30', '16:45', '19:30', '22:15']
-                },
-                {
-                    id: 2,
-                    name: 'Luncinemas Quốc Thanh',
-                    address: '12 Quốc Thanh, Q.1, TP.HCM',
-                    showtimes: ['10:30', '14:00', '17:15', '20:00']
-                },
-                {
-                    id: 3,
-                    name: 'Luncinemas Sinh Viên',
-                    address: '234 Lê Duẩn, Q.1, TP.HCM',
-                    showtimes: ['11:00', '15:30', '18:45', '21:30']
+    // Extracted filter options
+    const [allRooms, setAllRooms] = useState<string[]>([]);
+    const [dates, setDates] = useState<string[]>([]);
+    const [showtimesList, setShowtimesList] = useState<string[]>([]);
+    const [moviesList, setMoviesList] = useState<string[]>([]);
+    
+    // Fetch rooms from backend
+    useEffect(() => {
+        const fetchRooms = async () => {
+            try {
+                const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backendemo-cbwy.onrender.com';
+                if (!backendUrl) {
+                    console.error('NEXT_PUBLIC_BACKEND_URL is not set');
+                    setAllRooms([]);
+                    return;
                 }
-            ]
-        },
-        {
-            id: 2,
-            title: 'QUỶ NHẬP TRÀNG 2',
-            rating: 'T18',
-            genre: 'Kinh dị',
-            duration: 110,
-            country: 'Việt Nam',
-            language: 'Tiếng Việt',
-            description: 'Phim dành cho khán giả từ đủ 18 tuổi trở lên (18+)',
-            poster: 'https://picsum.photos/id/106/300/400',
-            isShowing: true,
-            cinemas: [
-                {
-                    id: 1,
-                    name: 'Luncinemas Hai Bà Trưng',
-                    address: '52 Nguyễn Trãi, Q.1, TP.HCM',
-                    showtimes: ['12:00', '15:00', '18:00', '21:00']
-                },
-                {
-                    id: 4,
-                    name: 'Luncinemas Cộng Hòa',
-                    address: '123 Cộng Hòa, Q.Tân Bình, TP.HCM',
-                    showtimes: ['13:00', '16:00', '19:00', '22:00']
+                const res = await fetch(`${backendUrl}/api/rooms`);
+                if (!res.ok) {
+                    console.error('Failed to fetch rooms, status:', res.status);
+                    setAllRooms([]);
+                    return;
                 }
-            ]
-        },
-        {
-            id: 3,
-            title: 'CHÚNG SẼ ĐOẠT MẠNG',
-            rating: 'T16',
-            genre: 'Kinh dị, Tâm lý',
-            duration: 95,
-            country: 'Mỹ',
-            language: 'Phụ đề',
-            description: 'Phim dành cho khán giả từ đủ 16 tuổi trở lên (16+)',
-            poster: 'https://picsum.photos/id/107/300/400',
-            isShowing: false,
-            cinemas: []
-        },
-        {
-            id: 4,
-            title: 'TỨ HỔ ĐẠI NÁO',
-            rating: 'T16',
-            genre: 'Hài, Hành động',
-            duration: 120,
-            country: 'Việt Nam',
-            language: 'Tiếng Việt',
-            description: 'Phim dành cho khán giả từ đủ 16 tuổi trở lên (16+)',
-            poster: 'https://picsum.photos/id/108/300/400',
-            isShowing: true,
-            cinemas: [
-                {
-                    id: 2,
-                    name: 'Luncinemas Quốc Thanh',
-                    address: '12 Quốc Thanh, Q.1, TP.HCM',
-                    showtimes: ['09:30', '12:30', '15:30', '18:30', '21:30']
-                },
-                {
-                    id: 3,
-                    name: 'Luncinemas Sinh Viên',
-                    address: '234 Lê Duẩn, Q.1, TP.HCM',
-                    showtimes: ['10:30', '13:30', '16:30', '19:30']
-                }
-            ]
-        }
-    ];
+                const data = await res.json();
+                // Assuming each room has a 'name' property
+                const roomNames = data.map((r: any) => r.name || r.title || `${r.id}`);
+                setAllRooms(roomNames);
+            } catch (err) {
+                console.error('Error fetching rooms', err);
+                setAllRooms([]);
+            }
+        };
+        fetchRooms();
+    }, []);
+    
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const data = await getNowShowingMovies();
+                
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const maxDate = new Date(today);
+                maxDate.setDate(today.getDate() + 4);
+                maxDate.setHours(23, 59, 59, 999);
+                
+                // Format the fetched MovieDTOs into MovieSchedule format
+                const formatted: MovieSchedule[] = data.map((m: any) => {
+                    const cinemasMap = new Map<string, Cinema>();
+                    
+                    if (m.showtimes && Array.isArray(m.showtimes)) {
+                        m.showtimes.forEach((st: any) => {
+                            const showDate = new Date(st.showDate);
+                            showDate.setHours(0, 0, 0, 0);
+                            // Only include showtimes within the next 5 days
+                            if (showDate >= today && showDate <= maxDate) {
+                                const roomName = st.roomName || 'Phòng chiếu';
+                                if (!cinemasMap.has(roomName)) {
+                                    cinemasMap.set(roomName, {
+                                        id: st.roomId || 0,
+                                        name: roomName,
+                                        address: 'Cơ sở Luncinemas', // Mock address for now
+                                        showtimes: []
+                                    });
+                                }
+                                // Store the showtime information
+                                cinemasMap.get(roomName)?.showtimes.push({
+                                    id: st.id,
+                                    showDate: st.showDate,
+                                    showTime: st.showTime, // assume this is like "10:30:00"
+                                    price: st.price,
+                                    roomId: st.roomId,
+                                    roomName: st.roomName
+                                });
+                            }
+                        });
+                    }
+                    
+                    // Sort showtimes by date and time
+                    cinemasMap.forEach((cinema) => {
+                        cinema.showtimes.sort((a, b) => {
+                            const dateA = new Date(a.showDate).getTime();
+                            const dateB = new Date(b.showDate).getTime();
+                            if (dateA !== dateB) return dateA - dateB;
+                            return a.showTime.localeCompare(b.showTime);
+                        });
+                    });
+                    
+                    return {
+                        id: m.id,
+                        title: m.title,
+                        rating: m.ageLimit || 'P',
+                        genre: m.genre,
+                        duration: m.duration,
+                        country: 'N/A', // or add if available
+                        language: m.language,
+                        description: m.content || '',
+                        poster: m.posterUrl?.startsWith('http') ? m.posterUrl : `https://backendemo-cbwy.onrender.com/images/${m.posterUrl}`,
+                        isShowing: true,
+                        cinemas: Array.from(cinemasMap.values())
+                    };
+                });
+                
+                setMoviesSchedule(formatted);
+                
+                // Extract filter options dynamically
+                const allDates = new Set<string>();
+                const allShowtimes = new Set<string>();
+                const allMovies = new Set<string>();
+                
+                formatted.forEach(m => {
+                    if (m.cinemas.length > 0) allMovies.add(m.title);
+                    m.cinemas.forEach(c => {
+                        c.showtimes.forEach(st => {
+                            allDates.add(st.showDate);
+                            const timeStr = st.showTime?.slice(0, 5) || '';
+                            if (timeStr) allShowtimes.add(timeStr);
+                        });
+                    });
+                });
+                
+                setDates(Array.from(allDates).sort());
+                setShowtimesList(Array.from(allShowtimes).sort());
+                setMoviesList(Array.from(allMovies));
+                
+            } catch (err) {
+                console.error("Failed to fetch showtimes", err);
+            }
+        };
+        fetchData();
+    }, []);
 
     useEffect(() => {
-        const { theater, movie } = formData;
-        if (!theater && !movie) {
+        if (timeParam) {
+            setFormData(prev => ({ ...prev, showtime: timeParam }));
+        }
+    }, [timeParam]);
+
+    useEffect(() => {
+        const { theater, movie, date, showtime } = formData;
+
+        // If initial load and a timeParam is present, we still want to filter. 
+        if (!theater && !movie && !date && !showtime) {
             setFilteredResults([]);
             setHasSearched(false);
             return;
@@ -161,18 +208,37 @@ const LichChieuPage = () => {
         const results = moviesSchedule
             .filter(m => m.isShowing)
             .filter(m => !movie || m.title === movie)
-            .map(m => ({
-                ...m,
-                cinemas: m.cinemas.filter(c => !theater || c.name === theater)
-            }))
+            .map(m => {
+                const filteredCinemas = m.cinemas
+                    .filter(c => !theater || c.name === theater)
+                    .map(c => {
+                        const filteredShowtimes = c.showtimes.filter(t => {
+                            const matchDate = !date || t.showDate === date;
+                            const tTime = t.showTime?.slice(0, 5) || '';
+                            const matchTime = !showtime || tTime === showtime;
+                            return matchDate && matchTime;
+                        });
+
+                        return {
+                            ...c,
+                            showtimes: filteredShowtimes
+                        };
+                    })
+                    .filter(c => c.showtimes.length > 0);
+
+                return {
+                    ...m,
+                    cinemas: filteredCinemas
+                };
+            })
             .filter(m => m.cinemas.length > 0);
 
         setFilteredResults(results);
-    }, [formData.theater, formData.movie]);
+    }, [formData, moviesSchedule]);
 
     // Component card phim dùng chung
     const MovieCard = ({ movie }: { movie: MovieSchedule }) => (
-        <div className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+        <div className="bg-[#1a237e]/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all">
             <div className="flex flex-col md:flex-row">
                 <div className="md:w-64 flex-shrink-0">
                     <img
@@ -184,43 +250,43 @@ const LichChieuPage = () => {
                 <div className="flex-1 p-6">
                     <div className="mb-4">
                         <div className="flex items-center gap-2 mb-2">
-                            <h3 className="text-xl font-bold text-gray-800">{movie.title}</h3>
-                            <span className="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">
+                            <h3 className="text-xl font-bold text-white">{movie.title}</h3>
+                            <span className="bg-[#7c4dff] text-white px-2 py-1 rounded text-xs font-bold">
                                 {movie.rating}
                             </span>
                         </div>
-                        <p className="text-gray-600 text-sm mb-2">{movie.genre}</p>
-                        <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-3">
+                        <p className="text-gray-300 text-sm mb-2">{movie.genre}</p>
+                        <div className="flex flex-wrap gap-4 text-sm text-gray-400 mb-3">
                             <span>⏱ {movie.duration} phút</span>
-                            <span>🌍 {movie.country}</span>
+                            {/* <span>🌍 {movie.country}</span> */}
                             <span>🎬 {movie.language}</span>
                         </div>
-                        <p className="text-xs text-gray-400">{movie.description}</p>
+                        <p className="text-xs text-gray-300 line-clamp-2">{movie.description}</p>
                     </div>
 
                     {movie.cinemas.length > 0 ? (
                         <div>
-                            <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                <span>🎥</span> Các rạp đang chiếu:
+                            <h4 className="font-semibold text-gray-300 mb-3 flex items-center gap-2">
+                                <span>🎥</span> Các thời gian đang chiếu:
                             </h4>
                             <div className="space-y-3">
                                 {movie.cinemas.map((cinema) => (
                                     <div
-                                        key={cinema.id}
-                                        className="bg-gray-50 rounded-lg p-4 border border-gray-200"
+                                        key={cinema.name}
+                                        className="bg-white/5 rounded-lg p-4 border border-white/10"
                                     >
                                         <div className="mb-2">
-                                            <div className="font-semibold text-gray-800">{cinema.name}</div>
-                                            <div className="text-xs text-gray-500">{cinema.address}</div>
+                                            <div className="font-semibold text-white">{cinema.name}</div>
+                                            <div className="text-xs text-gray-400">{cinema.address}</div>
                                         </div>
                                         <div className="flex flex-wrap gap-2 mt-2">
-                                            {cinema.showtimes.map((time, idx) => (
+                                            {cinema.showtimes.map((st) => (
                                                 <Link
-                                                    key={idx}
-                                                    href={`/dat-ve?movie=${movie.id}&cinema=${cinema.id}&time=${time}`}
-                                                    className="px-3 py-1 bg-red-50 text-red-600 rounded-lg text-sm hover:bg-red-600 hover:text-white transition"
+                                                    key={st.id}
+                                                    href={`/booking/${movie.id}?showtimeId=${st.id}`}
+                                                    className="px-3 py-1 bg-[#3b3f8c]/60 text-white border border-white/10 rounded-lg text-sm hover:bg-[#7c4dff] hover:border-transparent transition"
                                                 >
-                                                    {time}
+                                                    {st.showTime?.slice(0, 5)} - {st.showDate}
                                                 </Link>
                                             ))}
                                         </div>
@@ -229,8 +295,8 @@ const LichChieuPage = () => {
                             </div>
                         </div>
                     ) : (
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-                            <p className="text-yellow-700">
+                        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 text-center">
+                            <p className="text-yellow-400">
                                 🎬 Phim chưa có lịch chiếu. Vui lòng quay lại sau!
                             </p>
                         </div>
@@ -241,48 +307,48 @@ const LichChieuPage = () => {
     );
 
     return (
-        <div className="min-h-screen bg-gray-100 py-8">
+        <div className="min-h-screen bg-transparent text-white py-8">
             <div className="container mx-auto px-4">
 
                 {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-800">LỊCH CHIẾU PHIM</h1>
-                    <p className="text-gray-600 mt-2">Cập nhật lịch chiếu mới nhất tại các rạp</p>
+                <div className="mb-8 border-b border-white/10 pb-4">
+                    <h1 className="text-3xl font-bold text-white">LỊCH CHIẾU PHIM</h1>
+                    <p className="text-gray-400 mt-2">Cập nhật lịch chiếu mới nhất tại các rạp</p>
                 </div>
 
                 {/* FORM ĐẶT VÉ NHANH */}
-                <div className="bg-gradient-to-r from-red-800 to-red-600 text-white rounded-xl shadow-2xl mb-8 overflow-hidden">
+                <div className="bg-[#1a237e]/40 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl mb-8 overflow-hidden">
                     <div className="p-6">
-                        <h2 className="text-2xl md:text-3xl font-bold text-center mb-6">ĐẶT VÉ NHANH</h2>
+                        <h2 className="text-2xl md:text-3xl font-bold text-center mb-6 text-yellow-300">TÌM CHUYẾN NHANH</h2>
 
-                        <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-2xl p-6">
+                        <div className="max-w-5xl mx-auto bg-white/5 border border-white/10 rounded-xl shadow-2xl p-6">
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <select
                                     value={formData.theater}
                                     onChange={(e) => setFormData({ ...formData, theater: e.target.value })}
-                                    className="p-3 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                                    className="p-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-[#7c4dff] focus:ring-1 focus:ring-[#7c4dff] transition [&>option]:text-black"
                                 >
-                                    <option value="">Chọn Rạp</option>
-                                    {theaters.map((theater, index) => (
-                                        <option key={index} value={theater}>{theater}</option>
+                                    <option value="">Chọn Phòng</option>
+                                    {allRooms.map((room, index) => (
+                                        <option key={index} value={room}>{room}</option>
                                     ))}
                                 </select>
 
                                 <select
                                     value={formData.movie}
                                     onChange={(e) => setFormData({ ...formData, movie: e.target.value })}
-                                    className="p-3 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                                    className="p-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-[#7c4dff] focus:ring-1 focus:ring-[#7c4dff] transition [&>option]:text-black"
                                 >
                                     <option value="">Chọn Phim</option>
-                                    {nowShowingMovies.map((movie) => (
-                                        <option key={movie.id} value={movie.title}>{movie.title}</option>
+                                    {moviesList.map((movie, index) => (
+                                        <option key={index} value={movie}>{movie}</option>
                                     ))}
                                 </select>
 
                                 <select
                                     value={formData.date}
                                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                    className="p-3 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                                    className="p-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-[#7c4dff] focus:ring-1 focus:ring-[#7c4dff] transition [&>option]:text-black"
                                 >
                                     <option value="">Chọn Ngày</option>
                                     {dates.map((date, index) => (
@@ -293,10 +359,10 @@ const LichChieuPage = () => {
                                 <select
                                     value={formData.showtime}
                                     onChange={(e) => setFormData({ ...formData, showtime: e.target.value })}
-                                    className="p-3 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                                    className="p-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-[#7c4dff] focus:ring-1 focus:ring-[#7c4dff] transition [&>option]:text-black"
                                 >
                                     <option value="">Chọn Suất</option>
-                                    {showtimes.map((time, index) => (
+                                    {showtimesList.map((time, index) => (
                                         <option key={index} value={time}>{time}</option>
                                     ))}
                                 </select>
@@ -308,11 +374,11 @@ const LichChieuPage = () => {
                 {/* KẾT QUẢ TÌM KIẾM — hiện ngay dưới form khi có filter */}
                 {hasSearched && (
                     <div className="mb-10">
-                        <h2 className="text-xl font-bold text-gray-800 mb-4">
+                        <h2 className="text-xl font-bold text-yellow-300 mb-4">
                             🔍 Kết quả tìm kiếm ({filteredResults.length} phim)
                         </h2>
                         {filteredResults.length === 0 ? (
-                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center text-yellow-700">
+                            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 text-center text-yellow-400">
                                 Không tìm thấy suất chiếu phù hợp. Thử chọn rạp hoặc phim khác!
                             </div>
                         ) : (
@@ -327,16 +393,30 @@ const LichChieuPage = () => {
 
                 {/* Danh sách phim đầy đủ */}
                 <div>
-                    <h2 className="text-xl font-bold text-gray-800 mb-4">🎬 Tất cả phim đang chiếu</h2>
-                    <div className="space-y-6">
-                        {moviesSchedule.map((movie) => (
-                            <MovieCard key={movie.id} movie={movie} />
-                        ))}
-                    </div>
+                    <h2 className="text-xl font-bold text-white mb-4">🎬 Tất cả phim đang chiếu</h2>
+                    {moviesSchedule.length === 0 ? (
+                        <div className="bg-[#1a237e]/40 backdrop-blur-md border border-white/10 p-8 rounded-xl shadow-md text-center text-gray-300">
+                            Đang tải lịch chiếu...
+                        </div>
+                    ) : (
+                        <div className="space-y-6">
+                            {moviesSchedule.map((movie) => (
+                                <MovieCard key={movie.id} movie={movie} />
+                            ))}
+                        </div>
+                    )}
                 </div>
 
             </div>
         </div>
+    );
+};
+
+const LichChieuPage = () => {
+    return (
+        <Suspense fallback={<div className="p-10 text-center text-xl">Loading...</div>}>
+            <LichChieuPageContent />
+        </Suspense>
     );
 };
 

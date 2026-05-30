@@ -45,7 +45,7 @@ export default function AdminUsersPage() {
   const [newUser, setNewUser] = useState({ name: "", email: "", phone: "", password: "", role: "USER" });
 
   const fetchUsers = () => {
-    fetch("http://localhost:8080/api/users")
+    fetch("https://backendemo-cbwy.onrender.com/api/users")
       .then(r => r.json())
       .then(d => setUsers(Array.isArray(d) ? d : []))
       .catch(console.error);
@@ -57,7 +57,7 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     if (!selectedUser) return;
-    fetch(`http://localhost:8080/api/statistics/user/${selectedUser.id}/history`)
+    fetch(`https://backendemo-cbwy.onrender.com/api/statistics/user/${selectedUser.id}/history`)
       .then(r => r.json())
       .then(d => setHistory(Array.isArray(d) ? d : []))
       .catch(console.error);
@@ -77,7 +77,7 @@ export default function AdminUsersPage() {
     if (!confirm(`Bạn có chắc muốn ${u.status ? "khoá" : "mở khoá"} tài khoản ${u.email}?`)) return;
     
     try {
-      const res = await fetch(`http://localhost:8080/api/users/${u.id}`, {
+      const res = await fetch(`https://backendemo-cbwy.onrender.com/api/users/${u.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...u, status: !u.status })
@@ -94,7 +94,7 @@ export default function AdminUsersPage() {
     if (!confirm(`Bạn có chắc chắn muốn xoá người dùng ${name} vĩnh viễn?`)) return;
 
     try {
-      const res = await fetch(`http://localhost:8080/api/users/${id}`, { method: "DELETE" });
+      const res = await fetch(`https://backendemo-cbwy.onrender.com/api/users/${id}`, { method: "DELETE" });
       if (res.ok) {
         if (selectedUser?.id === id) setSelectedUser(null);
         fetchUsers();
@@ -109,7 +109,7 @@ export default function AdminUsersPage() {
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:8080/api/users", {
+      const res = await fetch("https://backendemo-cbwy.onrender.com/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newUser)
@@ -174,7 +174,7 @@ export default function AdminUsersPage() {
             {history.length > 0 ? history.map((h, i) => (
               <div key={i} style={{ background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 16, overflow: "hidden", display: "flex" }}>
                 <img 
-                  src={h.posterUrl ? `http://localhost:8080/images/${h.posterUrl}` : "https://placehold.co/100x150?text=No+Poster"} 
+                  src={h.posterUrl ? `https://backendemo-cbwy.onrender.com/images/${h.posterUrl}` : "https://placehold.co/100x150?text=No+Poster"} 
                   alt={h.movieTitle} 
                   style={{ width: 100, objectFit: "cover", backgroundColor: "#f1f5f9" }} 
                 />

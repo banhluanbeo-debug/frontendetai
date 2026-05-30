@@ -117,6 +117,7 @@ import {
     getComingSoonMovies,
     getNowShowingMovies,
 } from "@/app/components/services/movie.service";
+import QuickContactForm from "../component/home/QuickContactForm";
 // ================= TYPES =================
 interface Movie {
     id: number;
@@ -132,14 +133,6 @@ const Home = () => {
     const [comingSoon, setComingSoon] = useState<Movie[]>([]);
 
     // ===== STATIC DATA =====
-    const theaters = [
-        "Luncinemas Hai Bà Trưng",
-        "Luncinemas Quốc Thanh",
-        "Luncinemas Sinh Viên",
-    ];
-
-    const dates = ["19/03", "20/03", "21/03", "22/03", "23/03"];
-    const showtimes = ["10:00", "13:30", "16:45", "19:30", "22:15"];
 
     const promotions = [
         {
@@ -195,23 +188,14 @@ const Home = () => {
         getComingSoonMovies().then(setComingSoon);
     }, []);
 
-    // ===== BOOKING =====
-    const handleBooking = (data: any) => {
-        console.log("Booking data:", data);
-    };
+
 
     // ===== UI =====
     return (
         <div className="min-h-screen text-white bg-transparent">
 
             {/* QUICK BOOKING */}
-            <QuickBookingForm
-                theaters={theaters}
-                movies={nowShowing}
-                dates={dates}
-                showtimes={showtimes}
-                onSubmit={handleBooking}
-            />
+            <QuickBookingForm movies={nowShowing} />
 
             {/* NOW SHOWING */}
             <NowShowing movies={nowShowing} />
@@ -228,6 +212,9 @@ const Home = () => {
 
             {/* MEMBERSHIP */}
             <MembershipPrograms memberships={memberships} />
+
+            {/* CONTACT */}
+            <QuickContactForm />
 
             {/* SERVICES */}
             <EntertainmentServices services={services} />

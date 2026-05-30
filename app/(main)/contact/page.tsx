@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 interface ContactForm {
@@ -21,6 +21,23 @@ const LienHePage = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitStatus, setSubmitStatus] = useState<'success' | 'error' | null>(null);
 
+    useEffect(() => {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+            try {
+                const parsedUser = JSON.parse(storedUser);
+                setFormData(prev => ({
+                    ...prev,
+                    name: parsedUser.name || prev.name,
+                    email: parsedUser.email || prev.email,
+                    phone: parsedUser.phone || prev.phone
+                }));
+            } catch (error) {
+                console.error("Lỗi khi đọc thông tin user từ localStorage:", error);
+            }
+        }
+    }, []);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setFormData({
             ...formData,
@@ -31,15 +48,26 @@ const LienHePage = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
+        setSubmitStatus(null);
 
-        // Simulate API call
-        setTimeout(() => {
-            console.log('Form data:', formData);
-            setIsSubmitting(false);
+        try {
+            const res = await fetch("https://backendemo-cbwy.onrender.com/api/contacts", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData)
+            });
+
+            if (!res.ok) throw new Error("Gửi liên hệ thất bại");
+
             setSubmitStatus('success');
-            setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+            setFormData(prev => ({ ...prev, subject: '', message: '' }));
+        } catch (error) {
+            console.error(error);
+            setSubmitStatus('error');
+        } finally {
+            setIsSubmitting(false);
             setTimeout(() => setSubmitStatus(null), 5000);
-        }, 1500);
+        }
     };
 
     const contactInfo = [

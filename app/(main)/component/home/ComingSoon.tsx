@@ -41,7 +41,9 @@ const ComingSoon: React.FC<ComingSoonProps> = ({ movies }) => {
                             <img
                                 src={
                                     movie.posterUrl
-                                        ? `http://localhost:8080/images/${movie.posterUrl}`
+                                        ? movie.posterUrl.startsWith('http')
+                                            ? movie.posterUrl
+                                            : `https://backendemo-cbwy.onrender.com/images/${movie.posterUrl}`
                                         : "/no-image.jpg"
                                 }
                                 alt={movie.title}

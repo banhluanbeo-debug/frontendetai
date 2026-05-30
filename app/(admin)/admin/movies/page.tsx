@@ -66,9 +66,9 @@ export default function AdminMoviesPage() {
   const fetchData = async () => {
     try {
       const [mRes, stRes, rRes] = await Promise.all([
-        fetch("http://localhost:8080/api/movies"),
-        fetch("http://localhost:8080/api/showtimes"),
-        fetch("http://localhost:8080/api/rooms")
+        fetch("https://backendemo-cbwy.onrender.com/api/movies"),
+        fetch("https://backendemo-cbwy.onrender.com/api/showtimes"),
+        fetch("https://backendemo-cbwy.onrender.com/api/rooms")
       ]);
       setMovies(Array.isArray(await mRes.clone().json()) ? await mRes.json() : []);
       setShowtimes(Array.isArray(await stRes.clone().json()) ? await stRes.json() : []);
@@ -92,7 +92,7 @@ export default function AdminMoviesPage() {
     e.preventDefault();
     setErrorMsg("");
     try {
-      const url = isEditMovie ? `http://localhost:8080/api/movies/${movieForm.id}` : "http://localhost:8080/api/movies";
+      const url = isEditMovie ? `https://backendemo-cbwy.onrender.com/api/movies/${movieForm.id}` : "https://backendemo-cbwy.onrender.com/api/movies";
       const method = isEditMovie ? "PUT" : "POST";
       const res = await fetch(url, {
         method,
@@ -114,7 +114,7 @@ export default function AdminMoviesPage() {
   const deleteMovie = async (id: number) => {
     if(!confirm("Bạn có chắc xoá phim này?")) return;
     try {
-      await fetch(`http://localhost:8080/api/movies/${id}`, { method: "DELETE" });
+      await fetch(`https://backendemo-cbwy.onrender.com/api/movies/${id}`, { method: "DELETE" });
       fetchData();
     } catch(e) {}
   };
@@ -123,7 +123,7 @@ export default function AdminMoviesPage() {
     e.preventDefault();
     setErrorMsg("");
     try {
-      const url = isEditShowtime ? `http://localhost:8080/api/showtimes/${singleForm.id}` : "http://localhost:8080/api/showtimes";
+      const url = isEditShowtime ? `https://backendemo-cbwy.onrender.com/api/showtimes/${singleForm.id}` : "https://backendemo-cbwy.onrender.com/api/showtimes";
       const method = isEditShowtime ? "PUT" : "POST";
       const res = await fetch(url, {
         method,
@@ -150,7 +150,7 @@ export default function AdminMoviesPage() {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:8080/api/showtimes/bulk`, {
+      const res = await fetch(`https://backendemo-cbwy.onrender.com/api/showtimes/bulk`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bulkForm)
@@ -171,7 +171,7 @@ export default function AdminMoviesPage() {
   const deleteShowtime = async (id: number) => {
     if(!confirm("Xoá suất chiếu này?")) return;
     try {
-      const res = await fetch(`http://localhost:8080/api/showtimes/${id}`, { method: "DELETE" });
+      const res = await fetch(`https://backendemo-cbwy.onrender.com/api/showtimes/${id}`, { method: "DELETE" });
       if (res.ok) fetchData();
       else {
         const err = await res.json().catch(()=>null);
@@ -184,7 +184,7 @@ export default function AdminMoviesPage() {
     if (selectedShowtimes.length === 0) return;
     if (!confirm(`Bạn muốn xoá ${selectedShowtimes.length} suất chiếu đã chọn?`)) return;
     try {
-      const res = await fetch(`http://localhost:8080/api/showtimes/bulk-delete`, {
+      const res = await fetch(`https://backendemo-cbwy.onrender.com/api/showtimes/bulk-delete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(selectedShowtimes)
@@ -250,7 +250,7 @@ export default function AdminMoviesPage() {
                       onClick={() => setExpandedMovieId(isExpanded ? null : m.id)}>
                     <td style={{ padding: "14px 20px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        <img src={m.posterUrl ? (m.posterUrl.startsWith("http") ? m.posterUrl : `http://localhost:8080/images/${m.posterUrl}`) : "https://placehold.co/50x75?text=No+Poster"} alt={m.title} style={{ width: 44, height: 66, borderRadius: 6, objectFit: "cover" }} />
+                        <img src={m.posterUrl ? (m.posterUrl.startsWith("http") ? m.posterUrl : `https://backendemo-cbwy.onrender.com/images/${m.posterUrl}`) : "https://placehold.co/50x75?text=No+Poster"} alt={m.title} style={{ width: 44, height: 66, borderRadius: 6, objectFit: "cover" }} />
                         <div>
                           <p style={{ margin: 0, fontWeight: 700, fontSize: 15, color: "#1e293b" }}>{m.title}</p>
                           <span style={{ display: "inline-block", marginTop: 6, fontSize: 11, fontWeight: 600, color: "#4f46e5", background: "#e0e7ff", padding: "2px 8px", borderRadius: 4 }}>

@@ -23,7 +23,7 @@ export default function AdminRoomsPage() {
 
   const fetchData = async () => {
     try {
-      const res = await fetch("http://localhost:8080/api/rooms");
+      const res = await fetch("https://backendemo-cbwy.onrender.com/api/rooms");
       const data = await res.json();
       setRooms(Array.isArray(data) ? data : []);
       if (selectedRoom) {
@@ -44,7 +44,7 @@ export default function AdminRoomsPage() {
   const handleSaveRoom = async (e: React.FormEvent) => {
     e.preventDefault(); setErrorMsg("");
     try {
-      const url = isEditRoom ? `http://localhost:8080/api/rooms/${roomForm.id}` : "http://localhost:8080/api/rooms";
+      const url = isEditRoom ? `https://backendemo-cbwy.onrender.com/api/rooms/${roomForm.id}` : "https://backendemo-cbwy.onrender.com/api/rooms";
       const res = await fetch(url, { method: isEditRoom ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: roomForm.name }) });
       if (res.ok) { setShowRoomModal(false); fetchData(); } else { setErrorMsg("Lưu phòng thất bại"); }
     } catch { setErrorMsg("Lỗi kết nối"); }
@@ -53,7 +53,7 @@ export default function AdminRoomsPage() {
   const deleteRoom = async (id: number) => {
     if (!confirm("Bạn có chắc xoá phòng này?")) return;
     try {
-      const res = await fetch(`http://localhost:8080/api/rooms/${id}`, { method: "DELETE" });
+      const res = await fetch(`https://backendemo-cbwy.onrender.com/api/rooms/${id}`, { method: "DELETE" });
       if (!res.ok) { const err = await res.json().catch(() => null); alert(err?.message || "Không thể xoá!"); }
       else { if (selectedRoom?.id === id) setSelectedRoom(null); fetchData(); }
     } catch { }
@@ -66,7 +66,7 @@ export default function AdminRoomsPage() {
       const promises = [];
       for (let r = 0; r < genRows; r++) {
         for (let c = 1; c <= genCols; c++) {
-          promises.push(fetch("http://localhost:8080/api/seats", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code: rowLabels[r] + c, type: "REGULAR", status: true, room: { id: selectedRoom.id } }) }));
+          promises.push(fetch("https://backendemo-cbwy.onrender.com/api/seats", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code: rowLabels[r] + c, type: "REGULAR", status: true, room: { id: selectedRoom.id } }) }));
         }
       }
       await Promise.all(promises);
@@ -76,12 +76,12 @@ export default function AdminRoomsPage() {
   };
 
   const updateSeatType = async (seat: Seat, newType: string) => {
-    try { await fetch(`http://localhost:8080/api/seats/${seat.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...seat, type: newType, room: { id: selectedRoom?.id } }) }); fetchData(); } catch { }
+    try { await fetch(`https://backendemo-cbwy.onrender.com/api/seats/${seat.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...seat, type: newType, room: { id: selectedRoom?.id } }) }); fetchData(); } catch { }
   };
 
   const deleteSeat = async (seatId: number) => {
     try {
-      const res = await fetch(`http://localhost:8080/api/seats/${seatId}`, { method: "DELETE" });
+      const res = await fetch(`https://backendemo-cbwy.onrender.com/api/seats/${seatId}`, { method: "DELETE" });
       if (!res.ok) { const err = await res.json().catch(() => null); alert(err?.message || "Không thể xoá ghế này!"); }
       else fetchData();
     } catch { }
@@ -91,7 +91,7 @@ export default function AdminRoomsPage() {
     if (selectedSeatIds.length === 0) return;
     if (!confirm(`Xoá ${selectedSeatIds.length} ghế đã chọn?`)) return;
     try {
-      const results = await Promise.allSettled(selectedSeatIds.map(id => fetch(`http://localhost:8080/api/seats/${id}`, { method: "DELETE" })));
+      const results = await Promise.allSettled(selectedSeatIds.map(id => fetch(`https://backendemo-cbwy.onrender.com/api/seats/${id}`, { method: "DELETE" })));
       const failed = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.ok));
       if (failed.length > 0) alert(`Có ${failed.length} ghế không thể xoá (đã có người đặt).`);
       setSelectedSeatIds([]); setDeleteMode(false); fetchData();
@@ -99,7 +99,7 @@ export default function AdminRoomsPage() {
   };
 
   const toggleSeatStatus = async (seat: Seat) => {
-    try { await fetch(`http://localhost:8080/api/seats/${seat.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...seat, status: !seat.status, room: { id: selectedRoom?.id } }) }); fetchData(); } catch { }
+    try { await fetch(`https://backendemo-cbwy.onrender.com/api/seats/${seat.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...seat, status: !seat.status, room: { id: selectedRoom?.id } }) }); fetchData(); } catch { }
   };
 
   // Group seats by row

@@ -40,19 +40,19 @@ export default function DashboardPage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    fetch(`http://localhost:8080/api/statistics/monthly?month=${month}&year=${year}`)
+    fetch(`https://backendemo-cbwy.onrender.com/api/statistics/monthly?month=${month}&year=${year}`)
       .then(r => r.json()).then(d => setMovieStats(Array.isArray(d) ? d : [])).catch(console.error);
   }, [month, year]);
 
   useEffect(() => {
     if (!selectedMovie) return;
-    fetch(`http://localhost:8080/api/statistics/movie/${selectedMovie.movieId}/daily?month=${month}&year=${year}`)
+    fetch(`https://backendemo-cbwy.onrender.com/api/statistics/movie/${selectedMovie.movieId}/daily?month=${month}&year=${year}`)
       .then(r => r.json()).then(d => setDailyStats(Array.isArray(d) ? d : [])).catch(console.error);
   }, [selectedMovie, month, year]);
 
   useEffect(() => {
     if (!selectedMovie || !selectedDate) return;
-    fetch(`http://localhost:8080/api/statistics/movie/${selectedMovie.movieId}/showtimes?date=${selectedDate}`)
+    fetch(`https://backendemo-cbwy.onrender.com/api/statistics/movie/${selectedMovie.movieId}/showtimes?date=${selectedDate}`)
       .then(r => r.json()).then(d => setShowtimeStats(Array.isArray(d) ? d : [])).catch(console.error);
   }, [selectedMovie, selectedDate]);
 

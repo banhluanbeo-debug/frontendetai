@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8080/api/movies";
+const BASE_URL = "https://backendemo-cbwy.onrender.com/api/movies";
 
 export const getMovies = async () => {
     const res = await fetch(BASE_URL, {

@@ -1,14 +1,65 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { register } from "@/app/components/services/auth.service";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { GOOGLE_CLIENT_ID } from "@/app/config/google";
 
 export default function RegisterPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [googleReady, setGoogleReady] = useState(false);
+
+    const handleGoogleCallback = async (response: any) => {
+        console.log("Google credential:", response.credential);
+
+        try {
+            const res = await fetch("https://backendemo-cbwy.onrender.com/api/auth/google", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    token: response.credential,
+                }),
+            });
+
+            if (!res.ok) throw new Error("Google login failed");
+
+            const data = await res.json();
+            console.log("Login Google success:", data);
+            localStorage.setItem("user", JSON.stringify(data));
+            router.push("/");
+        } catch (err) {
+            console.error(err);
+            setError("Đăng nhập Google thất bại");
+        }
+    };
+
+    useEffect(() => {
+        const initGoogle = () => {
+            if (window.google) {
+                window.google.accounts.id.initialize({
+                    client_id: GOOGLE_CLIENT_ID,
+                    callback: handleGoogleCallback,
+                    use_fedcm_for_prompt: false,
+                });
+
+                window.google.accounts.id.renderButton(
+                    document.getElementById("googleBtn"),
+                    { theme: "outline", size: "large", width: "400" }
+                );
+
+                setGoogleReady(true);
+            } else {
+                setTimeout(initGoogle, 100);
+            }
+        };
+
+        initGoogle();
+    }, []);
 
     const [form, setForm] = useState({
         name: "",
@@ -120,6 +171,8 @@ export default function RegisterPage() {
                             </button>
                         </div>
                     </form>
+
+                    <div id="googleBtn" className="mt-4 flex justify-center"></div>
 
                     <div className="mt-8 text-center text-sm text-gray-400">
                         Đã có tài khoản?{" "}
